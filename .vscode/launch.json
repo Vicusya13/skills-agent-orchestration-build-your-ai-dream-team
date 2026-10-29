@@ -1,0 +1,1 @@
+{"version":"0.2.0","configurations":[{"name":"Run Project Pulse Dashboard","type":"node-terminal","request":"launch","command":"npx --yes http-server app -p 8080 -o index.html -c-1","cwd":"${workspaceFolder}"}]}
