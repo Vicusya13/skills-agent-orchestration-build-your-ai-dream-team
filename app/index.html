@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Pulse</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <h1>Project Pulse</h1>
+      <p>Active projects, owners, status and recent activity at a glance.</p>
+    </header>
+
+    <ul class="summary" id="summary" aria-label="Status summary"></ul>
+
+    <section class="project-grid" id="projects" aria-live="polite" aria-label="Projects"></section>
+  </main>
+
+  <script>
+    // Loads project-data.json and renders one project-card per project
+    // (name, owner, status, recentActivity, priority).
+    const slug = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+    function createCard(project) {
+      const card = document.createElement("article");
+      card.className = "project-card";
+
+      const title = document.createElement("h2");
+      title.textContent = project.name;
+
+      const badges = document.createElement("div");
+      badges.className = "badges";
+
+      const status = document.createElement("span");
+      status.className = "badge status status-" + slug(project.status);
+      status.textContent = "Status: " + project.status;
+
+      const priority = document.createElement("span");
+      priority.className = "badge priority priority-" + slug(project.priority);
+      priority.textContent = "Priority: " + project.priority;
+
+      badges.append(status, priority);
+
+      const owner = document.createElement("p");
+      owner.className = "owner";
+      owner.textContent = "Owner: " + project.owner;
+
+      card.append(title, badges, owner);
+
+      if (project.summary) {
+        const summary = document.createElement("p");
+        summary.className = "project-summary";
+        summary.textContent = project.summary;
+        card.append(summary);
+      }
+
+      const activity = document.createElement("p");
+      activity.className = "activity";
+      activity.textContent = "Recent activity: " + project.recentActivity;
+      card.append(activity);
+
+      return card;
+    }
+
+    function renderSummary(projects) {
+      const counts = {};
+      projects.forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+      const list = document.getElementById("summary");
+      list.replaceChildren(
+        ...Object.entries(counts).map(([status, count]) => {
+          const item = document.createElement("li");
+          item.textContent = status + ": " + count;
+          return item;
+        })
+      );
+    }
+
+    async function loadProjects() {
+      const container = document.getElementById("projects");
+      try {
+        const response = await fetch("project-data.json");
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const { projects } = await response.json();
+        renderSummary(projects);
+        container.replaceChildren(...projects.map(createCard));
+      } catch (error) {
+        container.innerHTML = '<p class="error">Could not load project-data.json. Start the dashboard with "Run Project Pulse Dashboard".</p>';
+        console.error(error);
+      }
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
